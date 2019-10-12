@@ -1,5 +1,7 @@
 package xiaokai.singledog.mtp;
 
+import xiaokai.singledog.tool.Tool;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -59,7 +61,7 @@ public class MyPlayer {
 	 * @return
 	 */
 	public static String getMarry(String player) {
-		if (isMarry(player)) {
+		if (isMarry(player) || isEngag(player)) {
 			Config config = getConfig(player);
 			return config.getString("伴侣");
 		}
@@ -127,6 +129,7 @@ public class MyPlayer {
 		map.put("性别", null);
 		map.put("允许伴侣传送", true);
 		map.put("允许伴侣拿钱", false);
+		map.put("订婚", false);
 		map.put("未读消息", new ArrayList<>());
 		map.put("友好度", new HashMap<>());
 		map.put("闺蜜", new HashMap<>());
@@ -134,6 +137,16 @@ public class MyPlayer {
 		map.put("被求婚", new ArrayList<>());
 		map.put("求婚", new ArrayList<>());
 		return map;
+	}
+
+	/**
+	 * 判断玩家是否订婚
+	 * 
+	 * @param player
+	 * @return
+	 */
+	public static boolean isEngag(String player) {
+		return Tool.ObjToBool(getConfig(player).get("订婚"), false);
 	}
 
 	/**
@@ -145,11 +158,40 @@ public class MyPlayer {
 		LinkedHashMap<String, Object> map = new LinkedHashMap<>();
 		map.put("亲密度", 0);
 		map.put("小金库", 0);
-		map.put("相恋时长", 0);
+		map.put("关系", null);
 		map.put("纪念日", null);
+		map.put("Players", new ArrayList<>());
 		map.put("签到", new HashMap<>());
 		map.put("小仓库", new HashMap<>());
 		return map;
+	}
+
+	/**
+	 * 获取婚姻关系
+	 * 
+	 * @param name
+	 * @param player
+	 * @return
+	 */
+	public static String getRelation(String name, String player) {
+		String sex1 = getSex(name), sex2 = getSex(player);
+		if (getSexBool(sex1, sex2, "男", "妖"))
+			return Kick.kick.Message.getSon("关系", "男妖");
+		String[] sexs = { "男", "女", "无", "妖" };
+		String string = Kick.kick.Message.getSon("关系", "默认");
+		for (int i = 0; i < sexs.length; i++)
+			for (int j = i; j < sexs.length; j++)
+				if (getSexBool(sex1, sex2, sexs[i], sexs[j])) {
+					string = Kick.kick.Message.getSon("关系", sexs[i] + sexs[j]) == null
+							? Kick.kick.Message.getSon("关系", sexs[j] + sexs[i])
+							: Kick.kick.Message.getSon("关系", sexs[i] + sexs[j]);
+					break;
+				}
+		return string;
+	}
+
+	public static boolean getSexBool(String sex1, String sex2, String sex3, String sex4) {
+		return (sex1.equals(sex3) && sex2.equals(sex4)) || (sex1.equals(sex4) && sex2.equals(sex1));
 	}
 
 	/**
